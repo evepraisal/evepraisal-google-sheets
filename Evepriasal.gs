@@ -13,9 +13,25 @@
   For bug reports see https://github.com/evepraisal/evepraisal-google-sheets
   ------------------------------------------------------------------------------------------------------------------------------------
   Changelog:
-  
+
+  1.0.1  Adds request caching
   1.0.0  Initial release
  *====================================================================================================================================*/
+
+function fetchUrl(url, timeout) {
+  if (timeout == null) {
+    timeout = 300;
+  }
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get(url);
+  if (cached != null) {
+    return cached;
+  }
+
+  var jsondata = UrlFetchApp.fetch(url).getContentText();
+  cache.put(url, jsondata, timeout);
+  return jsondata;
+}
 
 /**
  * Imports the total buy or sell price of an Evepraisal given the appraisal id.
@@ -39,8 +55,8 @@ function EvepraisalTotal(appraisal_id, order_type) {
     order_type = "sell";
   }
 
-  var jsondata = UrlFetchApp.fetch("https://evepraisal.com/a/" + appraisal_id + ".json");
-  var object   = JSON.parse(jsondata.getContentText());
+  var jsondata = fetchUrl("https://evepraisal.com/item/" + item_id + ".json", 86400);
+  var object = JSON.parse(jsondata);
   return object["totals"][order_type];
 }
 
@@ -78,8 +94,8 @@ function EvepraisalItem(item_id, market, order_type, attribute) {
     }
   }
 
-  var jsondata = UrlFetchApp.fetch("https://evepraisal.com/item/" + item_id + ".json");
-  var object = JSON.parse(jsondata.getContentText());
+  var jsondata = fetchUrl("https://evepraisal.com/item/" + item_id + ".json", 300);
+  var object = JSON.parse(jsondata);
   
   for (i in object["summaries"]) {
     if (object["summaries"][i]["market_name"] == market) {
