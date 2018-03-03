@@ -1,0 +1,1 @@
+Start using the 'EVEPRAISAL_ITEM' and 'EVEPRAISAL_TOTAL' functions by choosing "Add-ons > Evepraisal > Usein this spreadsheet".

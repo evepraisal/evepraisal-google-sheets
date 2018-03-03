@@ -7,16 +7,43 @@
 
   ------------------------------------------------------------------------------------------------------------------------------------
   A library for importing evepraisal data into Google spreadsheets. Functions include:
-     EvepraisalTotal  For getting totals of an existing appraisal
-     EvepraisalItem   For getting the current price of an item
+     EVEPRAISAL_TOTAL  For getting totals of an existing appraisal
+     EVEPRAISAL_ITEM   For getting the current price of an item
   
   For bug reports see https://github.com/evepraisal/evepraisal-google-sheets
   ------------------------------------------------------------------------------------------------------------------------------------
   Changelog:
-
-  1.0.1  Adds request caching
+  
   1.0.0  Initial release
  *====================================================================================================================================*/
+
+/**
+ * @fileoverview Provides the custom functions EVEPRAISAL_ITEM and EVEPRAISAL_TOTAL
+ * @OnlyCurrentDoc
+ */
+
+function onInstall() {
+  onOpen();
+}
+
+// This method adds a custom menu item to run the script
+function onOpen() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.addMenu('Evepraisal',
+             [{ name: 'Use in this spreadsheet', functionName: 'use' }]);
+}
+
+/**
+ * Show available functions
+ */
+function use() {
+  var title = 'Evepraisal Functions';
+  var message = 'The EVEPRAISAL_TOTAL and EVEPRAISAL_ITEM functions are now available in ' +
+      'this spreadsheet. More information is available in the function help ' +
+      'box that appears when you start using them in a forumula.';
+  var ui = SpreadsheetApp.getUi();
+  ui.alert(title, message, ui.ButtonSet.OK);
+}
 
 function fetchUrl(url, timeout) {
   if (timeout == null) {
@@ -38,15 +65,15 @@ function fetchUrl(url, timeout) {
  *
  * For example:
  *
- *   =EvepraisalTotal("gp5av", "buy")
- *   =EvepraisalTotal("gp5av")
+ *   =EVEPRAISAL_TOTAL("gp5av", "buy")
+ *   =EVEPRAISAL_TOTAL("gp5av")
  * 
  * @param {appraisal_id} the alphanumeric id of the appraisal. E.G. "gp5av".
  * @param {order_type}   the order type. The options are: "buy" or "sell". The default is "sell".
  * @return a single value.
  * @customfunction
  **/
-function EvepraisalTotal(appraisal_id, order_type) {
+function EVEPRAISAL_TOTAL(appraisal_id, order_type) {
   if (appraisal_id == null) {
     throw "required parameter 'appraisal_id' not given"
   }
@@ -54,7 +81,7 @@ function EvepraisalTotal(appraisal_id, order_type) {
   if (order_type == null) {
     order_type = "sell";
   }
-
+  
   var jsondata = fetchUrl("https://evepraisal.com/item/" + item_id + ".json", 86400);
   var object = JSON.parse(jsondata);
   return object["totals"][order_type];
@@ -65,9 +92,9 @@ function EvepraisalTotal(appraisal_id, order_type) {
  *
  * For example:
  *
- *   =EvepraisalItem(34, "jita", "sell", "volume")
- *   =EvepraisalItem(34, "jita", "sell", "min")
- *   =EvepraisalItem(34, "jita", "sell", "avg")
+ *   =EVEPRAISAL_ITEM(34, "jita", "sell", "volume")
+ *   =EVEPRAISAL_ITEM(34, "jita", "sell", "min")
+ *   =EVEPRAISAL_ITEM(34, "jita", "sell", "avg")
  * 
  * @param {item_id}    the numeric id of the item. The ID is shown when searching for an item on Evepraisal. E.G. 587 for rifter.
  * @param {market}     the market to price an item in. Options are "universe", "jita", "amarr", "dodixie", "hek", "rens". The default is "jita".
@@ -76,7 +103,7 @@ function EvepraisalTotal(appraisal_id, order_type) {
  * @return a single value.
  * @customfunction
  **/
-function EvepraisalItem(item_id, market, order_type, attribute) {
+function EVEPRAISAL_ITEM(item_id, market, order_type, attribute) {
   if (item_id == null) {
     item_id = 34; // because why not show some tritanium as a default
   }
