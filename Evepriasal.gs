@@ -1,5 +1,5 @@
 /*====================================================================================================================================*
-  Evepraisal by Kevin McDonald
+  Evepraisal Tools by Kevin McDonald
   ====================================================================================================================================
   Version:      1.0.0
   Project Page: https://github.com/evepraisal/evepraisal-google-sheets
@@ -61,15 +61,10 @@ function fetchUrl(url, timeout) {
 }
 
 /**
- * Imports the total buy or sell price of an Evepraisal given the appraisal id.
- *
- * For example:
- *
- *   =EVEPRAISAL_TOTAL("gp5av", "buy")
- *   =EVEPRAISAL_TOTAL("gp5av")
+ * Imports the total buy or sell price of an Evepraisal given the appraisal id. For example: =EVEPRAISAL_TOTAL("gp5av", "buy")
  * 
- * @param {appraisal_id} the alphanumeric id of the appraisal. E.G. "gp5av".
- * @param {order_type}   the order type. The options are: "buy" or "sell". The default is "sell".
+ * @param {string} appraisal_id the alphanumeric id of the appraisal. E.G. "gp5av".
+ * @param {string} order_type The options are: "buy" or "sell". The default is "sell".
  * @return a single value.
  * @customfunction
  **/
@@ -82,25 +77,18 @@ function EVEPRAISAL_TOTAL(appraisal_id, order_type) {
     order_type = "sell";
   }
   
-  var jsondata = fetchUrl("https://evepraisal.com/item/" + item_id + ".json", 86400);
+  var jsondata = fetchUrl("https://evepraisal.com/a/" + appraisal_id + ".json", 86400);
   var object = JSON.parse(jsondata);
   return object["totals"][order_type];
 }
 
 /**
  * Imports the price of an Eve Online item from Evepraisal by item id.
- *
- * For example:
- *
- *   =EVEPRAISAL_ITEM(34, "jita", "sell", "volume")
- *   =EVEPRAISAL_ITEM(34, "jita", "sell", "min")
- *   =EVEPRAISAL_ITEM(34, "jita", "sell", "avg")
- * 
- * @param {item_id}    the numeric id of the item. The ID is shown when searching for an item on Evepraisal. E.G. 587 for rifter.
- * @param {market}     the market to price an item in. Options are "universe", "jita", "amarr", "dodixie", "hek", "rens". The default is "jita".
- * @param {order_type} the order type. The options are: "buy" or "sell". The default is "sell".
- * @param {attribute}  the attribute to use when . Options are "avg", "max", "median", "min", "percentile", "stddev", "volume", "order_count". The default is "min" for sell and "max" for buy.
- * @return a single value.
+ * @param {number} item_id the numeric id of an eve online item. This ID is shown when searching for an item on Evepraisal. E.G. 587 for rifter.
+ * @param {string} market the market to price an item in. Options are "universe", "jita", "amarr", "dodixie", "hek", "rens". The default is "jita".
+ * @param {string} order_type the order type. The options are: "buy" or "sell". The default is "sell".
+ * @param {string} attribute the attribute to use when . Options are "avg", "max", "median", "min", "percentile", "stddev", "volume", "order_count". The default is "min" for sell and "max" for buy.
+ * @return {number}
  * @customfunction
  **/
 function EVEPRAISAL_ITEM(item_id, market, order_type, attribute) {

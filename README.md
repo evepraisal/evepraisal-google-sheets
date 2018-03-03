@@ -19,4 +19,5 @@ Evepraisal helper functions intended for use in Google sheets
 =EVEPRAISAL_ITEM(34, "jita", "sell", "volume")
 =EVEPRAISAL_ITEM(34, "jita", "sell", "min")
 =EVEPRAISAL_ITEM(34, "jita", "sell", "avg")
+
 ```

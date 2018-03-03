@@ -1,5 +1,5 @@
-Title: Evepraisal
+Title: Evepraisal Tools
 Short description: Import Evepraisal item prices directly into your spreadsheets. Get live prices for Eve Online items where you need them the most.
 Help URL:
 Report Issue URL: https://github.com/evepraisal/evepraisal-google-sheets/issues/new
-Post-install tip: Start using the 'EVEPRAISAL_ITEM' and 'EVEPRAISAL_TOTAL' functions by choosing "Add-ons > Evepraisal > Usein this spreadsheet".
+Post-install tip: Start using the 'EVEPRAISAL_ITEM' and 'EVEPRAISAL_TOTAL' functions by choosing "Add-ons > Evepraisal > Use in this spreadsheet".
