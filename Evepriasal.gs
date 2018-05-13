@@ -1,7 +1,7 @@
 /*====================================================================================================================================*
   Evepraisal Tools by Kevin McDonald
   ====================================================================================================================================
-  Version:      1.0.0
+  Version:      1.1.0
   Project Page: https://github.com/evepraisal/evepraisal-google-sheets
   Copyright:    (c) 2018 by Kevin McDonald
 
@@ -15,6 +15,8 @@
   Changelog:
   
   1.0.0  Initial release
+  1.1.0  Handle urlfetch limit more gracefully by trying to return a long-term cache copy.
+         Allow names for EVEPRAISAL_ITEM as well as type IDs.
  *====================================================================================================================================*/
 
 /**
@@ -45,19 +47,35 @@ function use() {
   ui.alert(title, message, ui.ButtonSet.OK);
 }
 
-function fetchUrl(url, timeout) {
+function fetchUrl(url, timeout, longTimeout) {
   if (timeout == null) {
     timeout = 300;
   }
   var cache = CacheService.getScriptCache();
   var cached = cache.get(url);
   if (cached != null) {
-    return cached;
+   return cached;
   }
 
-  var jsondata = UrlFetchApp.fetch(url).getContentText();
-  cache.put(url, jsondata, timeout);
-  return jsondata;
+  try {
+
+    var jsondata = UrlFetchApp.fetch(url).getContentText();
+    cache.put(url, jsondata, timeout);
+    if (longTimeout != null) {
+      cache.put("long|" + url, jsondata, longTimeout);
+    }
+    return jsondata;
+
+  } catch (ex) {
+    // If we hit our UrlFetchApp limit then try to pull from the long cache
+    if ((/Service invoked too many times for one day/ig).test(ex.toString())) {
+      var cached = cache.get("long|" + url);
+      if (cached != null) {
+        return cached;
+      }
+    }
+    throw ex;
+  }
 }
 
 /**
@@ -76,15 +94,15 @@ function EVEPRAISAL_TOTAL(appraisal_id, order_type) {
   if (order_type == null) {
     order_type = "sell";
   }
-  
-  var jsondata = fetchUrl("https://evepraisal.com/a/" + appraisal_id + ".json", 86400);
+
+  var jsondata = fetchUrl("https://evepraisal.com/a/" + encodeURIComponent(appraisal_id) + ".json", 86400, null);
   var object = JSON.parse(jsondata);
   return object["totals"][order_type];
 }
 
 /**
  * Imports the price of an Eve Online item from Evepraisal by item id.
- * @param {number} item_id the numeric id of an eve online item. This ID is shown when searching for an item on Evepraisal. E.G. 587 for rifter.
+ * @param {number} item_id the numeric id or name of an eve online item. This ID is shown when searching for an item on Evepraisal. E.G. 587 for rifter.
  * @param {string} market the market to price an item in. Options are "universe", "jita", "amarr", "dodixie", "hek", "rens". The default is "jita".
  * @param {string} order_type the order type. The options are: "buy" or "sell". The default is "sell".
  * @param {string} attribute the attribute to use when . Options are "avg", "max", "median", "min", "percentile", "stddev", "volume", "order_count". The default is "min" for sell and "max" for buy.
@@ -109,14 +127,14 @@ function EVEPRAISAL_ITEM(item_id, market, order_type, attribute) {
     }
   }
 
-  var jsondata = fetchUrl("https://evepraisal.com/item/" + item_id + ".json", 300);
+  var jsondata = fetchUrl("https://evepraisal.com/item/" + encodeURIComponent(item_id) + ".json", 300, 86400);
   var object = JSON.parse(jsondata);
-  
+
   for (i in object["summaries"]) {
     if (object["summaries"][i]["market_name"] == market) {
       return object["summaries"][i]["prices"][order_type][attribute];
     }
   }
-  
+
   throw "market "+market+" not found";
 }
