@@ -1,7 +1,7 @@
 /*====================================================================================================================================*
   Evepraisal Tools by Kevin McDonald
   ====================================================================================================================================
-  Version:      1.2.0
+  Version:      1.1.0
   Project Page: https://github.com/evepraisal/evepraisal-google-sheets
   Copyright:    (c) 2018 by Kevin McDonald
 
@@ -17,7 +17,6 @@
   1.0.0  Initial release
   1.1.0  Handle urlfetch limit more gracefully by trying to return a long-term cache copy.
          Allow names for EVEPRAISAL_ITEM as well as type IDs.
-  1.2.0  Batches API calls to items to prevent hitting the UrlFetch limit.
  *====================================================================================================================================*/
 
 /**
@@ -55,12 +54,11 @@ function fetchUrl(url, timeout, longTimeout) {
   var cache = CacheService.getScriptCache();
   var cached = cache.get(url);
   if (cached != null) {
-   Logger.log('Cache hit ' + url);
    return cached;
   }
 
   try {
-    Logger.log('Cache miss. fetching ' + url);
+
     var jsondata = UrlFetchApp.fetch(url).getContentText();
     cache.put(url, jsondata, timeout);
     if (longTimeout != null) {
@@ -73,33 +71,10 @@ function fetchUrl(url, timeout, longTimeout) {
     if ((/Service invoked too many times for one day/ig).test(ex.toString())) {
       var cached = cache.get("long|" + url);
       if (cached != null) {
-        Logger.log('UrlFetchApp limit hit, but found long cache value');
         return cached;
-      } else {
-        Logger.log('UrlFetchApp limit hit. Did not find long cache value');
       }
     }
     throw ex;
-  }
-}
-
-function fetchItem(item_id) {
-  if (typeof item_id == "number") {
-    var page_size = 25;
-    var pages = Math.floor(item_id/page_size);
-    var offset = pages * page_size - 1;
-    var jsondata = fetchUrl("https://evepraisal.com/items.json?offset=" + offset + "&limit=" + page_size, 300, 86400);
-    var response = JSON.parse(jsondata);
-    items = response['items'];
-    for (idx in items) {
-      if (items[idx]['type']['id'] == item_id) {
-        return items[idx];
-      }
-    }
-    throw "item "+item_id+" not found";
-  } else {
-    var jsondata = fetchUrl("https://evepraisal.com/item/" + encodeURIComponent(item_id) + ".json", 300, 86400);
-    return JSON.parse(jsondata);
   }
 }
 
@@ -108,7 +83,7 @@ function fetchItem(item_id) {
  * 
  * @param {string} appraisal_id the alphanumeric id of the appraisal. E.G. "gp5av".
  * @param {string} order_type The options are: "buy" or "sell". The default is "sell".
- * @return {number}
+ * @return a single value.
  * @customfunction
  **/
 function EVEPRAISAL_TOTAL(appraisal_id, order_type) {
@@ -135,11 +110,7 @@ function EVEPRAISAL_TOTAL(appraisal_id, order_type) {
  * @customfunction
  **/
 function EVEPRAISAL_ITEM(item_id, market, order_type, attribute) {
-  if (item_id === "#N/A" || item_id === "#ERROR!") {
-    throw "Invalid type: " + item_id;
-  }
-
-  if (item_id == null || item_id === "") {
+  if (item_id == null) {
     item_id = 34; // because why not show some tritanium as a default
   }
   if (market == null) {
@@ -156,10 +127,9 @@ function EVEPRAISAL_ITEM(item_id, market, order_type, attribute) {
     }
   }
 
-  var object = fetchItem(item_id);
-  if (object["summaries"] == null) {
-    throw "No market data for " + object['type']['name'];
-  }
+  var jsondata = fetchUrl("https://evepraisal.com/item/" + encodeURIComponent(item_id) + ".json", 300, 86400);
+  var object = JSON.parse(jsondata);
+
   for (i in object["summaries"]) {
     if (object["summaries"][i]["market_name"] == market) {
       return object["summaries"][i]["prices"][order_type][attribute];
